@@ -267,14 +267,21 @@ if(weighted_reporting=='Yes')
 }else {raw_data = raw_data %>%mutate(post_strat_weights = 1)%>%dplyr::select(-c(SAMPL_SEX,char_SAMPL_SEX,SAMPL_GRADE,char_SAMPL_GRADE))}
 
 ####Trimming of poststratification weights
-weights_gt_50th_p = quantile(raw_data$post_strat_weights, .50,na.rm = T)
-weights_gt_90th_p = quantile(raw_data$post_strat_weights, .90,na.rm = T)
+weight_quintiles = raw_data %>% group_by(category) %>%
+                    reframe(weights_gt_50th_p = quantile(post_strat_weights, .50,na.rm = T),
+                           weights_gt_90th_p = quantile(post_strat_weights, .90,na.rm = T))%>%
+                    dplyr::select(category,weights_gt_50th_p,weights_gt_90th_p)
 #
-raw_data = raw_data %>% mutate(post_strat_weights = ifelse(post_strat_weights>(4*weights_gt_50th_p),weights_gt_90th_p,post_strat_weights))
+raw_data = raw_data %>% 
+           left_join(weight_quintiles) %>% 
+           mutate(post_strat_weights = ifelse(post_strat_weights>(4*weights_gt_50th_p),weights_gt_90th_p,post_strat_weights))
+		   
 ###Normalising postratification weights
 # Calculate the sum of unnormalized weights (this should be approximately Ntotal)
 sum_post_strat_weights = sum(raw_data$post_strat_weights, na.rm = T)
 Ntotal = nrow(raw_data)
 #
-raw_data = raw_data %>% mutate(normalised_weights = (post_strat_weights/ sum_post_strat_weights) * Ntotal) 
+raw_data = raw_data %>% mutate(normalised_weights = (post_strat_weights/ sum_post_strat_weights) * Ntotal)
+raw_data = raw_data %>% dplyr::select(-c(weights_gt_50th_p,weights_gt_90th_p))
+ 
 
