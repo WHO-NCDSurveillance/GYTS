@@ -15,7 +15,7 @@ summary_table_fn = function(variable = 'CR5')
     {
       n_participants = data %>% filter(eval(parse(text=paste0(cond_subset,'&', cond1)))) %>% reframe(n()) %>% as.numeric()
       
-      if (n_participants>n_cutoff)
+      if (n_participants>=n_cutoff)
       {
         est_ciprop = svyciprop(formula, design=subset(svy_data,eval(parse(text=cond_subset))), method="lo", df = degrees_freedom)
       }
@@ -27,7 +27,7 @@ summary_table_fn = function(variable = 'CR5')
     else
     {
       n_participants = data %>% filter(eval(parse(text=cond1))) %>% reframe(n()) %>% as.numeric()
-      if (n_participants>n_cutoff)
+      if (n_participants>=n_cutoff)
       {
         est_ciprop =svyciprop(formula, design=subset(svy_data,eval(parse(text=cond1))), method="lo", df = degrees_freedom)
       }
@@ -38,9 +38,9 @@ summary_table_fn = function(variable = 'CR5')
     }
     
     #the proportion
-    total_est = ifelse(n_participants>n_cutoff,formatC(round(as.vector(est_ciprop)*100,1),format = 'f', digits = 1),'-')
+    total_est = ifelse(n_participants>=n_cutoff,formatC(round(as.vector(est_ciprop)*100,1),format = 'f', digits = 1),'-')
     # the confidence interval
-    est_ci = ifelse(n_participants>n_cutoff,paste0('(',formatC(round((as.numeric(attr(est_ciprop, "ci")[1]))*100,1),format = 'f', digits = 1),' - ',formatC(round(100*as.numeric(attr(est_ciprop, "ci")[2]),1),format = 'f', digits = 1),')'),'-')
+    est_ci = ifelse(n_participants>=n_cutoff,paste0('(',formatC(round((as.numeric(attr(est_ciprop, "ci")[1]))*100,1),format = 'f', digits = 1),' - ',formatC(round(100*as.numeric(attr(est_ciprop, "ci")[2]),1),format = 'f', digits = 1),')'),'-')
     ###
     if(weighted_reporting=='Yes'){
       result = bind_cols(total_est, est_ci, n_participants)%>%data.frame()
